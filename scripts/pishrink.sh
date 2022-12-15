@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="v0.1.2"
+version="v0.1.3 by Visolo"
 
 CURRENT_DIR="$(pwd)"
 SCRIPTNAME="${0##*/}"
@@ -164,6 +164,7 @@ Usage: $0 [-adhrspvzZ] imagefile.img [newimagefile.img]
   -Z         Compress image after shrinking with xz
   -a         Compress image in parallel using multiple cores
   -p         Remove logs, apt archives, dhcp leases and ssh hostkeys
+  -P         Remove logs, apt archives, dhcp leases and KEEP ssh hostkeys
   -d         Write debug messages in a debug log file
 EOM
 	echo "$help"
@@ -175,15 +176,16 @@ debug=false
 repair=false
 parallel=false
 verbose=false
-prep=false
+prep=""
 ziptool=""
 
-while getopts ":adhprsvzZ" opt; do
+while getopts ":adhpPrsvzZ" opt; do
   case "${opt}" in
     a) parallel=true;;
     d) debug=true;;
     h) help;;
-    p) prep=true;;
+    p) prep="full";;
+    P) prep="partial";;
     r) repair=true;;
     s) should_skip_autoexpand=true ;;
     v) verbose=true;;
@@ -312,12 +314,17 @@ else
   echo "Skipping autoexpanding process..."
 fi
 
-if [[ $prep == true ]]; then
-  info "Syspreping: Removing logs, apt archives, dhcp leases and ssh hostkeys"
+if [[ $prep != "" ]]; then
   mountdir=$(mktemp -d)
   mount "$loopback" "$mountdir"
-  #rm -rvf $mountdir/var/cache/apt/archives/* $mountdir/var/lib/dhcpcd5/* $mountdir/var/log/* $mountdir/var/tmp/* $mountdir/tmp/* $mountdir/etc/ssh/*_host_*
-  rm -rvf $mountdir/var/cache/apt/archives/* $mountdir/var/lib/dhcpcd5/* $mountdir/var/log/* $mountdir/var/tmp/* $mountdir/tmp/*
+  if [[$prep == "full"]]; then
+    info "Syspreping: Removing logs, apt archives, dhcp leases and ssh hostkeys"
+    rm -rvf $mountdir/var/cache/apt/archives/* $mountdir/var/lib/dhcpcd5/* $mountdir/var/log/* $mountdir/var/tmp/* $mountdir/tmp/* $mountdir/etc/ssh/*_host_*
+  fi
+  if [[$prep == "partial"]]; then
+    info "Syspreping: Removing logs, apt archives, dhcp leases and keeping ssh hostkeys"
+    rm -rvf $mountdir/var/cache/apt/archives/* $mountdir/var/lib/dhcpcd5/* $mountdir/var/log/* $mountdir/var/tmp/* $mountdir/tmp/*
+  fi
   umount "$mountdir"
 fi
 
