@@ -317,11 +317,11 @@ fi
 if [[ $prep != "" ]]; then
   mountdir=$(mktemp -d)
   mount "$loopback" "$mountdir"
-  if [[$prep == "full"]]; then
+  if [[ $prep == "full" ]]; then
     info "Syspreping: Removing logs, apt archives, dhcp leases and ssh hostkeys"
     rm -rvf $mountdir/var/cache/apt/archives/* $mountdir/var/lib/dhcpcd5/* $mountdir/var/log/* $mountdir/var/tmp/* $mountdir/tmp/* $mountdir/etc/ssh/*_host_*
   fi
-  if [[$prep == "partial"]]; then
+  if [[ $prep == "partial" ]]; then
     info "Syspreping: Removing logs, apt archives, dhcp leases and keeping ssh hostkeys"
     rm -rvf $mountdir/var/cache/apt/archives/* $mountdir/var/lib/dhcpcd5/* $mountdir/var/log/* $mountdir/var/tmp/* $mountdir/tmp/*
   fi
